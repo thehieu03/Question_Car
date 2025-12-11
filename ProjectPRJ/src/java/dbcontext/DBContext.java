@@ -1,7 +1,12 @@
 package dbcontext;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -13,30 +18,68 @@ import java.util.logging.Logger;
 
 public class DBContext {
     protected Connection connection;
+    private static final Logger logger = Logger.getLogger(DBContext.class.getName());
+
+    private InputStream findPropertiesFile() {
+        String[] classpathPaths = {
+            "ConnectDB.properties",
+            "../ConnectDB.properties",
+            "../../ConnectDB.properties",
+            "conf/ConnectDB.properties",
+            "../conf/ConnectDB.properties",
+            "../../conf/ConnectDB.properties",
+            "src/conf/ConnectDB.properties"
+        };
+        
+        for (String path : classpathPaths) {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
+            if (inputStream != null) {
+                logger.info("Found properties file in classpath at: " + path);
+                return inputStream;
+            }
+        }
+        
+        String[] fileSystemPaths = {
+            "src/conf/ConnectDB.properties",
+            "../src/conf/ConnectDB.properties",
+            "../../src/conf/ConnectDB.properties",
+            "conf/ConnectDB.properties",
+            "../conf/ConnectDB.properties",
+            "ConnectDB.properties",
+            "../ConnectDB.properties"
+        };
+        
+        String userDir = System.getProperty("user.dir");
+        logger.info("Current working directory: " + userDir);
+        
+        for (String path : fileSystemPaths) {
+            try {
+                File file = new File(path);
+                if (file.exists() && file.isFile()) {
+                    logger.info("Found properties file in filesystem at: " + file.getAbsolutePath());
+                    return new FileInputStream(file);
+                }
+                
+                File fileFromUserDir = new File(userDir, path);
+                if (fileFromUserDir.exists() && fileFromUserDir.isFile()) {
+                    logger.info("Found properties file in filesystem at: " + fileFromUserDir.getAbsolutePath());
+                    return new FileInputStream(fileFromUserDir);
+                }
+            } catch (IOException ex) {
+                logger.fine("Could not read file at: " + path);
+            }
+        }
+        
+        return null;
+    }
 
     public DBContext() {
         try {
             Properties properties = new Properties();
-            InputStream inputStream = null;
-            
-            String[] possiblePaths = {
-                "ConnectDB.properties",
-                "../ConnectDB.properties",
-                "../../ConnectDB.properties",
-                "conf/ConnectDB.properties",
-                "../conf/ConnectDB.properties"
-            };
-            
-            for (String path : possiblePaths) {
-                inputStream = getClass().getClassLoader().getResourceAsStream(path);
-                if (inputStream != null) {
-                    System.out.println("Found properties file at: " + path);
-                    break;
-                }
-            }
+            InputStream inputStream = findPropertiesFile();
             
             if (inputStream == null) {
-                throw new IOException("Cannot find ConnectDB.properties file. Tried paths: " + String.join(", ", possiblePaths));
+                throw new IOException("Cannot find ConnectDB.properties file. Please ensure the file exists in src/conf/ or build/web/WEB-INF/classes/");
             }
             
             try {
@@ -57,12 +100,11 @@ public class DBContext {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             connection = DriverManager.getConnection(url, user, pass);
             if (connection != null) {
-                System.out.println("Database connection established successfully!");
+                logger.info("Database connection established successfully!");
             }
         } catch (ClassNotFoundException | SQLException | IOException ex) {
-            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, "Failed to connect to database", ex);
-            System.err.println("Database connection error: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to connect to database", ex);
+            logger.severe("Database connection error: " + ex.getMessage());
             connection = null;
         }
     }
@@ -70,11 +112,11 @@ public class DBContext {
     public Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
-                System.out.println("Connection is null or closed, attempting to reconnect...");
+                logger.info("Connection is null or closed, attempting to reconnect...");
                 reconnect();
             }
         } catch (SQLException ex) {
-            System.err.println("Error checking connection: " + ex.getMessage());
+            logger.warning("Error checking connection: " + ex.getMessage());
             reconnect();
         }
         return connection;
@@ -83,26 +125,10 @@ public class DBContext {
     private void reconnect() {
         try {
             Properties properties = new Properties();
-            InputStream inputStream = null;
-            
-            String[] possiblePaths = {
-                "ConnectDB.properties",
-                "../ConnectDB.properties",
-                "../../ConnectDB.properties",
-                "conf/ConnectDB.properties",
-                "../conf/ConnectDB.properties"
-            };
-            
-            for (String path : possiblePaths) {
-                inputStream = getClass().getClassLoader().getResourceAsStream(path);
-                if (inputStream != null) {
-                    System.out.println("Reconnecting - Found properties file at: " + path);
-                    break;
-                }
-            }
+            InputStream inputStream = findPropertiesFile();
             
             if (inputStream == null) {
-                System.err.println("ERROR: Cannot find ConnectDB.properties file for reconnection!");
+                logger.severe("ERROR: Cannot find ConnectDB.properties file for reconnection!");
                 return;
             }
             
@@ -116,54 +142,52 @@ public class DBContext {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             connection = DriverManager.getConnection(url, user, pass);
             if (connection != null) {
-                System.out.println("Reconnection successful!");
+                logger.info("Reconnection successful!");
             }
         } catch (Exception ex) {
-            System.err.println("Reconnection failed: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Reconnection failed", ex);
+            logger.severe("Reconnection failed: " + ex.getMessage());
             connection = null;
         }
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Testing Database Connection ===");
+        logger.info("=== Testing Database Connection ===");
         
         try {
             DBContext dbContext = new DBContext();
             Connection conn = dbContext.connection;
             
             if (conn != null && !conn.isClosed()) {
-                System.out.println("✓ Connection successful!");
-                System.out.println("✓ Database: " + conn.getCatalog());
-                System.out.println("✓ Connection URL: " + conn.getMetaData().getURL());
-                System.out.println("✓ Driver: " + conn.getMetaData().getDriverName());
-                System.out.println("✓ Driver Version: " + conn.getMetaData().getDriverVersion());
+                logger.info("✓ Connection successful!");
+                logger.info("✓ Database: " + conn.getCatalog());
+                logger.info("✓ Connection URL: " + conn.getMetaData().getURL());
+                logger.info("✓ Driver: " + conn.getMetaData().getDriverName());
+                logger.info("✓ Driver Version: " + conn.getMetaData().getDriverVersion());
                 
-                System.out.println("\n=== Testing Query ===");
+                logger.info("=== Testing Query ===");
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS total FROM Users");
                 
                 if (rs.next()) {
                     int total = rs.getInt("total");
-                    System.out.println("✓ Query successful!");
-                    System.out.println("✓ Total users in database: " + total);
+                    logger.info("✓ Query successful!");
+                    logger.info("✓ Total users in database: " + total);
                 }
                 
                 rs.close();
                 stmt.close();
                 conn.close();
-                System.out.println("\n✓ Connection closed successfully!");
+                logger.info("✓ Connection closed successfully!");
             } else {
-                System.out.println("✗ Connection failed: Connection is null or closed");
+                logger.severe("✗ Connection failed: Connection is null or closed");
             }
         } catch (SQLException ex) {
-            System.out.println("✗ Connection failed!");
-            System.out.println("Error: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "✗ Connection failed!", ex);
+            logger.severe("Error: " + ex.getMessage());
         } catch (Exception ex) {
-            System.out.println("✗ Unexpected error!");
-            System.out.println("Error: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "✗ Unexpected error!", ex);
+            logger.severe("Error: " + ex.getMessage());
         }
     }
 }

@@ -208,6 +208,10 @@
                     <i class="icon fas fa-question-circle"></i>
                     Quản lý Câu hỏi
                 </a>
+                <a href="<%= request.getContextPath() %>/admin/categories" class="menu-item">
+                    <i class="icon fas fa-tags"></i>
+                    Quản lý Danh mục
+                </a>
                 <a href="<%= request.getContextPath() %>/admin/exams" class="menu-item">
                     <i class="icon fas fa-file-alt"></i>
                     Quản lý Đề thi

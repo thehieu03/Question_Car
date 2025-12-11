@@ -8,16 +8,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import model.User;
 
 public class UserDAO extends DBContext implements IUserDAO {
+    
+    private static final Logger logger = Logger.getLogger(UserDAO.class.getName());
 
     public int getTotalUsers() {
-        String sql = "SELECT COUNT(*) AS total FROM Users";
+        String sql = "SELECT COUNT(*) AS total FROM Users WHERE role != 1";
         try {
             Connection conn = getConnection();
             if (conn == null) {
-                System.err.println("ERROR: Database connection is null!");
+                logger.severe("ERROR: Database connection is null!");
                 return 0;
             }
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -27,24 +31,47 @@ public class UserDAO extends DBContext implements IUserDAO {
                 return rs.getInt("total");
             }
         } catch (SQLException ex) {
-            System.err.println("Error getting total users: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error getting total users", ex);
         }
         return 0;
     }
 
     public User login(String username, String password) {
+        logger.info("=== UserDAO.login() called ===");
+        logger.info("Username: " + (username != null ? "'" + username + "'" : "null"));
+        logger.info("Password: " + (password != null ? "***" : "null"));
+        
+        if (username == null || password == null) {
+            logger.warning("Login failed: Username or password is null");
+            return null;
+        }
+        
+        username = username.trim();
+        password = password.trim();
+        
+        if (username.isEmpty() || password.isEmpty()) {
+            logger.warning("Login failed: Username or password is empty");
+            return null;
+        }
+        
         String sql = "SELECT * FROM Users WHERE username = ? AND password = ?";
+        logger.info("Executing login query for username: '" + username + "'");
+        
         try {
             Connection conn = getConnection();
             if (conn == null) {
-                System.err.println("ERROR: Database connection is null after getConnection()!");
+                logger.severe("ERROR: Database connection is null after getConnection()!");
                 return null;
             }
+            logger.info("Database connection established successfully");
+            
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, username);
             ps.setString(2, password);
+            logger.info("PreparedStatement created with username: '" + username + "'");
+            
             ResultSet rs = ps.executeQuery();
+            logger.info("Query executed successfully");
             
             if (rs.next()) {
                 User user = new User();
@@ -53,24 +80,50 @@ public class UserDAO extends DBContext implements IUserDAO {
                 user.setEmail(rs.getString("email"));
                 user.setPassword(rs.getString("password"));
                 user.setRole(rs.getInt("role"));
+                logger.info("Login successful for user: " + user.getUsername() + " (Role: " + user.getRole() + ")");
                 return user;
+            } else {
+                logger.warning("No user found with username: '" + username + "' and provided password");
+                // Check if username exists
+                User userByUsername = getUserByUsername(username);
+                if (userByUsername != null) {
+                    logger.warning("Username exists but password doesn't match");
+                    logger.warning("Stored password in DB: '" + userByUsername.getPassword() + "'");
+                    logger.warning("Provided password: '" + password + "'");
+                    logger.warning("Passwords match: " + userByUsername.getPassword().equals(password));
+                } else {
+                    logger.warning("Username does not exist");
+                }
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "SQL Error during login", ex);
+            logger.severe("Error Code: " + ex.getErrorCode());
+            logger.severe("SQL State: " + ex.getSQLState());
+            logger.severe("Message: " + ex.getMessage());
+            logger.severe("SQL: " + sql);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Unexpected error during login", ex);
+            logger.severe("Error: " + ex.getClass().getName());
+            logger.severe("Message: " + ex.getMessage());
         }
         return null;
     }
 
     public User getUserByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+        
         String sql = "SELECT * FROM Users WHERE username = ?";
         try {
             Connection conn = getConnection();
             if (conn == null) {
-                System.err.println("ERROR: Database connection is null after getConnection()!");
+                logger.severe("ERROR: Database connection is null after getConnection() in getUserByUsername!");
+                logger.severe("  Username: " + username);
                 return null;
             }
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, username);
+            ps.setString(1, username.trim());
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
@@ -83,7 +136,16 @@ public class UserDAO extends DBContext implements IUserDAO {
                 return user;
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "SQL Error in getUserByUsername", ex);
+            logger.severe("  Error Code: " + ex.getErrorCode());
+            logger.severe("  SQL State: " + ex.getSQLState());
+            logger.severe("  Message: " + ex.getMessage());
+            logger.severe("  Username: " + username);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Unexpected error in getUserByUsername", ex);
+            logger.severe("  Error: " + ex.getClass().getName());
+            logger.severe("  Message: " + ex.getMessage());
+            logger.severe("  Username: " + username);
         }
         return null;
     }
@@ -93,7 +155,7 @@ public class UserDAO extends DBContext implements IUserDAO {
         try {
             Connection conn = getConnection();
             if (conn == null) {
-                System.err.println("ERROR: Database connection is null after getConnection()!");
+                logger.severe("ERROR: Database connection is null after getConnection()!");
                 return null;
             }
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -110,7 +172,7 @@ public class UserDAO extends DBContext implements IUserDAO {
                 return user;
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error getting user by email", ex);
         }
         return null;
     }
@@ -121,63 +183,61 @@ public class UserDAO extends DBContext implements IUserDAO {
         try {
             Connection conn = getConnection();
             if (conn == null) {
-                System.err.println("ERROR: Database connection is null after getConnection()!");
+                logger.severe("ERROR: Database connection is null after getConnection()!");
                 return false;
             }
             
-            System.out.println("Checking if username exists: " + username);
+            logger.info("Checking if username exists: " + username);
             User existingUser = getUserByUsername(username);
             if (existingUser != null) {
-                System.out.println("Username already exists: " + username);
+                logger.warning("Username already exists: " + username);
                 return false;
             }
             
-            System.out.println("Checking if email exists: " + email);
+            logger.info("Checking if email exists: " + email);
             User existingEmail = getUserByEmail(email);
             if (existingEmail != null) {
-                System.out.println("Email already exists: " + email);
+                logger.warning("Email already exists: " + email);
                 return false;
             }
             
-            System.out.println("Attempting to register user: " + username);
+            logger.info("Attempting to register user: " + username);
             ps = conn.prepareStatement(sql);
             ps.setString(1, username);
             ps.setString(2, email);
             ps.setString(3, password);
             
-            System.out.println("Executing INSERT statement...");
+            logger.info("Executing INSERT statement...");
             int result = ps.executeUpdate();
-            System.out.println("INSERT result: " + result + " row(s) affected");
+            logger.info("INSERT result: " + result + " row(s) affected");
             
             if (result > 0) {
-                System.out.println("✓ User registered successfully: " + username);
+                logger.info("✓ User registered successfully: " + username);
                 return true;
             } else {
-                System.err.println("✗ No rows affected during registration");
+                logger.warning("✗ No rows affected during registration");
                 return false;
             }
         } catch (SQLException ex) {
-            System.err.println("✗ SQL Error during registration:");
-            System.err.println("  Error Code: " + ex.getErrorCode());
-            System.err.println("  SQL State: " + ex.getSQLState());
-            System.err.println("  Message: " + ex.getMessage());
-            System.err.println("  SQL: " + sql);
-            System.err.println("  Username: " + username);
-            System.err.println("  Email: " + email);
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "✗ SQL Error during registration", ex);
+            logger.severe("  Error Code: " + ex.getErrorCode());
+            logger.severe("  SQL State: " + ex.getSQLState());
+            logger.severe("  Message: " + ex.getMessage());
+            logger.severe("  SQL: " + sql);
+            logger.severe("  Username: " + username);
+            logger.severe("  Email: " + email);
             return false;
         } catch (Exception ex) {
-            System.err.println("✗ Unexpected error during registration:");
-            System.err.println("  Error: " + ex.getClass().getName());
-            System.err.println("  Message: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "✗ Unexpected error during registration", ex);
+            logger.severe("  Error: " + ex.getClass().getName());
+            logger.severe("  Message: " + ex.getMessage());
             return false;
         } finally {
             if (ps != null) {
                 try {
                     ps.close();
                 } catch (SQLException ex) {
-                    System.err.println("Error closing PreparedStatement: " + ex.getMessage());
+                    logger.warning("Error closing PreparedStatement: " + ex.getMessage());
                 }
             }
         }
@@ -186,17 +246,17 @@ public class UserDAO extends DBContext implements IUserDAO {
     @Override
     public List<User> getAllUsers(int offset, int limit) {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM Users ORDER BY user_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT * FROM Users WHERE role != 1 ORDER BY user_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try {
             Connection conn = getConnection();
             if (conn == null) {
-                System.err.println("ERROR: Connection is null in getAllUsers");
+                logger.severe("ERROR: Connection is null in getAllUsers");
                 return users;
             }
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, offset);
             ps.setInt(2, limit);
-            System.out.println("Executing getAllUsers with offset=" + offset + ", limit=" + limit);
+            logger.info("Executing getAllUsers with offset=" + offset + ", limit=" + limit);
             ResultSet rs = ps.executeQuery();
             
             while (rs.next()) {
@@ -207,12 +267,10 @@ public class UserDAO extends DBContext implements IUserDAO {
                 user.setPassword(rs.getString("password"));
                 user.setRole(rs.getInt("role"));
                 users.add(user);
-                System.out.println("Added user: " + user.getUsername() + " (role: " + user.getRole() + ")");
             }
-            System.out.println("Total users retrieved: " + users.size());
+            logger.info("Total users retrieved: " + users.size());
         } catch (SQLException ex) {
-            System.err.println("Error getting all users: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error getting all users", ex);
         }
         return users;
     }
@@ -220,7 +278,7 @@ public class UserDAO extends DBContext implements IUserDAO {
     @Override
     public List<User> searchUsers(String keyword, int offset, int limit) {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM Users WHERE username LIKE ? OR email LIKE ? ORDER BY user_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT * FROM Users WHERE role != 1 AND (username LIKE ? OR email LIKE ?) ORDER BY user_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try {
             Connection conn = getConnection();
             if (conn == null) {
@@ -244,15 +302,14 @@ public class UserDAO extends DBContext implements IUserDAO {
                 users.add(user);
             }
         } catch (SQLException ex) {
-            System.err.println("Error searching users: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error searching users", ex);
         }
         return users;
     }
 
     @Override
     public int getTotalUsersBySearch(String keyword) {
-        String sql = "SELECT COUNT(*) AS total FROM Users WHERE username LIKE ? OR email LIKE ?";
+        String sql = "SELECT COUNT(*) AS total FROM Users WHERE role != 1 AND (username LIKE ? OR email LIKE ?)";
         try {
             Connection conn = getConnection();
             if (conn == null) {
@@ -268,8 +325,7 @@ public class UserDAO extends DBContext implements IUserDAO {
                 return rs.getInt("total");
             }
         } catch (SQLException ex) {
-            System.err.println("Error getting total users by search: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error getting total users by search", ex);
         }
         return 0;
     }
@@ -287,8 +343,7 @@ public class UserDAO extends DBContext implements IUserDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            System.err.println("Error banning user: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error banning user", ex);
         }
         return false;
     }
@@ -306,8 +361,7 @@ public class UserDAO extends DBContext implements IUserDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            System.err.println("Error unbanning user: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error unbanning user", ex);
         }
         return false;
     }
@@ -346,8 +400,7 @@ public class UserDAO extends DBContext implements IUserDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            System.err.println("Error updating user: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error updating user", ex);
         }
         return false;
     }
@@ -374,8 +427,7 @@ public class UserDAO extends DBContext implements IUserDAO {
                 return user;
             }
         } catch (SQLException ex) {
-            System.err.println("Error getting user by id: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error getting user by id", ex);
         }
         return null;
     }

@@ -42,6 +42,24 @@
     </servlet-mapping>
     
     <servlet>
+        <servlet-name>QuestionManagementServlet</servlet-name>
+        <servlet-class>serverlet.admin.QuestionManagementServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>QuestionManagementServlet</servlet-name>
+        <url-pattern>/admin/questions</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>CategoryManagementServlet</servlet-name>
+        <servlet-class>serverlet.admin.CategoryManagementServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CategoryManagementServlet</servlet-name>
+        <url-pattern>/admin/categories</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
         <servlet-name>LogoutServlet</servlet-name>
         <servlet-class>serverlet.common.LogoutServlet</servlet-class>
     </servlet>

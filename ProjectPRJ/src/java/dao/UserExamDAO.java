@@ -6,8 +6,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserExamDAO extends DBContext implements IUserExamDAO {
+    
+    private static final Logger logger = Logger.getLogger(UserExamDAO.class.getName());
 
     @Override
     public int getTotalUserExams() {
@@ -15,7 +19,7 @@ public class UserExamDAO extends DBContext implements IUserExamDAO {
         try {
             Connection conn = getConnection();
             if (conn == null) {
-                System.err.println("ERROR: Database connection is null!");
+                logger.severe("ERROR: Database connection is null!");
                 return 0;
             }
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -25,8 +29,7 @@ public class UserExamDAO extends DBContext implements IUserExamDAO {
                 return rs.getInt("total");
             }
         } catch (SQLException ex) {
-            System.err.println("Error getting total user exams: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Error getting total user exams", ex);
         }
         return 0;
     }

@@ -8,9 +8,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 import model.User;
 
 public class UserManagementServlet extends HttpServlet {
+    
+    private static final Logger logger = Logger.getLogger(UserManagementServlet.class.getName());
 
     private static final int USERS_PER_PAGE = 5;
 
@@ -48,13 +51,13 @@ public class UserManagementServlet extends HttpServlet {
             users = userDAO.searchUsers(trimmedKeyword, offset, USERS_PER_PAGE);
             totalUsers = userDAO.getTotalUsersBySearch(trimmedKeyword);
             request.setAttribute("keyword", trimmedKeyword);
-            System.out.println("Searching for keyword: " + trimmedKeyword);
-            System.out.println("Found " + users.size() + " users");
+            logger.info("Searching for keyword: " + trimmedKeyword);
+            logger.info("Found " + users.size() + " users");
         } else {
             users = userDAO.getAllUsers(offset, USERS_PER_PAGE);
             totalUsers = userDAO.getTotalUsers();
-            System.out.println("Getting all users, total: " + totalUsers);
-            System.out.println("Returned " + users.size() + " users");
+            logger.info("Getting all users, total: " + totalUsers);
+            logger.info("Returned " + users.size() + " users");
         }
 
         int totalPages = (int) Math.ceil((double) totalUsers / USERS_PER_PAGE);

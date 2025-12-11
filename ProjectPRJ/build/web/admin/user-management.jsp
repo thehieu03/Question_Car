@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="model.User"%>
 <%@page import="java.util.List"%>
+<%@page import="java.net.URLEncoder"%>
 <!DOCTYPE html>
 <html>
     <head>
@@ -271,8 +272,9 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                gap: 10px;
+                gap: 5px;
                 margin-top: 20px;
+                flex-wrap: wrap;
             }
 
             .pagination a, .pagination span {
@@ -281,9 +283,12 @@
                 border-radius: 5px;
                 text-decoration: none;
                 color: #333;
+                min-width: 40px;
+                text-align: center;
+                transition: all 0.3s;
             }
 
-            .pagination a:hover {
+            .pagination a:hover:not(.disabled) {
                 background: #667eea;
                 color: white;
                 border-color: #667eea;
@@ -293,6 +298,31 @@
                 background: #667eea;
                 color: white;
                 border-color: #667eea;
+                cursor: default;
+                font-weight: 600;
+            }
+
+            .pagination .disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
+            .pagination .ellipsis {
+                border: none;
+                cursor: default;
+                padding: 8px 5px;
+            }
+
+            .pagination-info {
+                text-align: center;
+                margin-top: 15px;
+                color: #666;
+                font-size: 14px;
+            }
+
+            .pagination-info strong {
+                color: #667eea;
             }
 
             .alert {
@@ -446,6 +476,10 @@
                     <i class="icon fas fa-question-circle"></i>
                     Quản lý Câu hỏi
                 </a>
+                <a href="<%= request.getContextPath() %>/admin/categories" class="menu-item">
+                    <i class="icon fas fa-tags"></i>
+                    Quản lý Danh mục
+                </a>
                 <a href="<%= request.getContextPath() %>/admin/exams" class="menu-item">
                     <i class="icon fas fa-file-alt"></i>
                     Quản lý Đề thi
@@ -561,32 +595,95 @@
                     </table>
                 </div>
 
+                <%
+                    int startPage = 1;
+                    int endPage = totalPages;
+                    boolean showStartEllipsis = false;
+                    boolean showEndEllipsis = false;
+                    
+                    if (totalPages > 9) {
+                        if (currentPage <= 4) {
+                            endPage = 5;
+                            showEndEllipsis = true;
+                        } else if (currentPage >= totalPages - 3) {
+                            startPage = totalPages - 4;
+                            showStartEllipsis = true;
+                        } else {
+                            startPage = currentPage - 2;
+                            endPage = currentPage + 2;
+                            showStartEllipsis = true;
+                            showEndEllipsis = true;
+                        }
+                    }
+                    
+                    int startIndex = (currentPage - 1) * 5 + 1;
+                    int endIndex = Math.min(currentPage * 5, totalUsers);
+                    
+                    String encodedKeyword = "";
+                    if (keyword != null && !keyword.isEmpty()) {
+                        try {
+                            encodedKeyword = "&keyword=" + URLEncoder.encode(keyword, "UTF-8");
+                        } catch (Exception e) {
+                            encodedKeyword = "&keyword=" + keyword;
+                        }
+                    }
+                %>
+
                 <% if (totalPages > 1) { %>
                 <div class="pagination">
                     <% if (currentPage > 1) { %>
-                        <a href="<%= request.getContextPath() %>/admin/users?page=<%= currentPage - 1 %><%= keyword != null ? "&keyword=" + keyword : "" %>">
+                        <a href="<%= request.getContextPath() %>/admin/users?page=<%= currentPage - 1 %><%= encodedKeyword %>">
                             <i class="fas fa-chevron-left"></i> Trước
                         </a>
+                    <% } else { %>
+                        <span class="disabled">
+                            <i class="fas fa-chevron-left"></i> Trước
+                        </span>
                     <% } %>
                     
-                    <% for (int i = 1; i <= totalPages; i++) { %>
-                        <% if (i == currentPage) { %>
-                            <span class="active"><%= i %></span>
-                        <% } else { %>
-                            <a href="<%= request.getContextPath() %>/admin/users?page=<%= i %><%= keyword != null ? "&keyword=" + keyword : "" %>"><%= i %></a>
+                    <% if (startPage > 1) { %>
+                        <a href="<%= request.getContextPath() %>/admin/users?page=1<%= encodedKeyword %>">1</a>
+                        <% if (showStartEllipsis) { %>
+                            <span class="ellipsis">...</span>
                         <% } %>
                     <% } %>
                     
+                    <% for (int i = startPage; i <= endPage; i++) { %>
+                        <% if (i == currentPage) { %>
+                            <span class="active"><%= i %></span>
+                        <% } else { %>
+                            <a href="<%= request.getContextPath() %>/admin/users?page=<%= i %><%= encodedKeyword %>"><%= i %></a>
+                        <% } %>
+                    <% } %>
+                    
+                    <% if (endPage < totalPages) { %>
+                        <% if (showEndEllipsis) { %>
+                            <span class="ellipsis">...</span>
+                        <% } %>
+                        <a href="<%= request.getContextPath() %>/admin/users?page=<%= totalPages %><%= encodedKeyword %>"><%= totalPages %></a>
+                    <% } %>
+                    
                     <% if (currentPage < totalPages) { %>
-                        <a href="<%= request.getContextPath() %>/admin/users?page=<%= currentPage + 1 %><%= keyword != null ? "&keyword=" + keyword : "" %>">
+                        <a href="<%= request.getContextPath() %>/admin/users?page=<%= currentPage + 1 %><%= encodedKeyword %>">
                             Sau <i class="fas fa-chevron-right"></i>
                         </a>
+                    <% } else { %>
+                        <span class="disabled">
+                            Sau <i class="fas fa-chevron-right"></i>
+                        </span>
                     <% } %>
                 </div>
                 <% } %>
 
-                <div style="margin-top: 20px; text-align: center; color: #666;">
-                    Tổng số: <strong><%= totalUsers %></strong> người dùng
+                <div class="pagination-info">
+                    <% if (totalUsers > 0) { %>
+                        Hiển thị <strong><%= startIndex %>-<%= endIndex %></strong> trong tổng số <strong><%= totalUsers %></strong> người dùng
+                        <% if (totalPages > 1) { %>
+                            | Trang <strong><%= currentPage %>/<%= totalPages %></strong>
+                        <% } %>
+                    <% } else { %>
+                        Không có người dùng nào
+                    <% } %>
                 </div>
             </div>
         </div>

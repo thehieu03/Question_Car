@@ -2,6 +2,7 @@ package serverlet.common;
 
 import dao.UserDAO;
 import java.io.IOException;
+import java.util.logging.Logger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +11,8 @@ import jakarta.servlet.http.HttpSession;
 import model.User;
 
 public class RegisterServlet extends HttpServlet {
+    
+    private static final Logger logger = Logger.getLogger(RegisterServlet.class.getName());
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -45,20 +48,20 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
         
-        System.out.println("=== Register Attempt ===");
-        System.out.println("Username: " + username);
-        System.out.println("Email: " + email);
+        logger.info("=== Register Attempt ===");
+        logger.info("Username: " + username);
+        logger.info("Email: " + email);
         
         boolean success = userDAO.register(username, email, password);
-        System.out.println("Register result: " + success);
+        logger.info("Register result: " + success);
         
         if (success) {
-            System.out.println("Registration successful, redirecting to login page");
+            logger.info("Registration successful, redirecting to login page");
             request.setAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
             request.setAttribute("username", username);
             request.getRequestDispatcher("/common/login.jsp").forward(request, response);
         } else {
-            System.out.println("Registration failed!");
+            logger.warning("Registration failed!");
             request.setAttribute("error", "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau! (Xem log server để biết chi tiết)");
             request.setAttribute("username", username);
             request.setAttribute("email", email);
