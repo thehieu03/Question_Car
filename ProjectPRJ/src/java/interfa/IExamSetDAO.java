@@ -9,5 +9,7 @@ public interface IExamSetDAO {
     boolean deleteExamSet(int examSetId);
     int getLastInsertedExamSetId();
     boolean addExamQuestions(int examSetId, java.util.List<model.Question> questions);
+    java.util.List<model.ExamSet> getExamSetsByCategory(int categoryId, int offset, int limit);
+    int getTotalExamSetsByCategory(int categoryId);
 }
 

@@ -14,6 +14,9 @@ public class UserExam implements Serializable {
     private Integer wrongAnswers;
     private Boolean isPassed;
     private String status;
+    private String username;
+    private String email;
+    private String examName;
 
     public UserExam() {
     }
@@ -110,6 +113,30 @@ public class UserExam implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getExamName() {
+        return examName;
+    }
+
+    public void setExamName(String examName) {
+        this.examName = examName;
     }
 
     public boolean isInProgress() {

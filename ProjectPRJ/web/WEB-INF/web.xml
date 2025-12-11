@@ -69,6 +69,15 @@
     </servlet-mapping>
     
     <servlet>
+        <servlet-name>ExamResultsServlet</servlet-name>
+        <servlet-class>serverlet.admin.ExamResultsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExamResultsServlet</servlet-name>
+        <url-pattern>/admin/exam-results</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
         <servlet-name>LogoutServlet</servlet-name>
         <servlet-class>serverlet.common.LogoutServlet</servlet-class>
     </servlet>
@@ -102,5 +111,36 @@
         <filter-name>UserFilter</filter-name>
         <url-pattern>/user/*</url-pattern>
     </filter-mapping>
+
+    <servlet>
+        <servlet-name>ExamSelectionServlet</servlet-name>
+        <servlet-class>serverlet.user.ExamSelectionServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExamSelectionServlet</servlet-name>
+        <url-pattern>/user/exams</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExamStartServlet</servlet-name>
+        <servlet-class>serverlet.user.ExamStartServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExamStartServlet</servlet-name>
+        <url-pattern>/user/exam/start</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>UserHomeServlet</servlet-name>
+        <servlet-class>serverlet.user.UserHomeServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UserHomeServlet</servlet-name>
+        <url-pattern>/user</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserHomeServlet</servlet-name>
+        <url-pattern>/user/</url-pattern>
+    </servlet-mapping>
     
 </web-app>

@@ -265,5 +265,72 @@ public class ExamSetDAO extends DBContext implements IExamSetDAO {
         }
         return false;
     }
+
+    @Override
+    public List<ExamSet> getExamSetsByCategory(int categoryId, int offset, int limit) {
+        List<ExamSet> examSets = new ArrayList<>();
+        String sql = """
+            SELECT DISTINCT es.exam_set_id, es.exam_name, es.total_questions, es.duration_minutes, es.passing_score
+            FROM ExamSets es
+            WHERE EXISTS (
+                SELECT 1 FROM ExamQuestions eq
+                JOIN Questions q ON eq.question_id = q.question_id
+                WHERE eq.exam_set_id = es.exam_set_id AND q.category_id = ?
+            )
+            ORDER BY es.exam_set_id
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+            """;
+        try {
+            Connection conn = getConnection();
+            if (conn == null) {
+                return examSets;
+            }
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, categoryId);
+            ps.setInt(2, offset);
+            ps.setInt(3, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ExamSet examSet = new ExamSet();
+                examSet.setExamSetId(rs.getInt("exam_set_id"));
+                examSet.setExamName(rs.getString("exam_name"));
+                examSet.setTotalQuestions(rs.getInt("total_questions"));
+                examSet.setDurationMinutes(rs.getInt("duration_minutes"));
+                examSet.setPassingScore(rs.getInt("passing_score"));
+                examSets.add(examSet);
+            }
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Error getting exam sets by category", ex);
+        }
+        return examSets;
+    }
+
+    @Override
+    public int getTotalExamSetsByCategory(int categoryId) {
+        String sql = """
+            SELECT COUNT(DISTINCT es.exam_set_id) AS total
+            FROM ExamSets es
+            WHERE EXISTS (
+                SELECT 1 FROM ExamQuestions eq
+                JOIN Questions q ON eq.question_id = q.question_id
+                WHERE eq.exam_set_id = es.exam_set_id AND q.category_id = ?
+            )
+            """;
+        try {
+            Connection conn = getConnection();
+            if (conn == null) {
+                return 0;
+            }
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, categoryId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Error getting total exam sets by category", ex);
+        }
+        return 0;
+    }
 }
 
