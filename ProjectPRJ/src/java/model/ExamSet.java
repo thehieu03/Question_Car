@@ -8,6 +8,8 @@ public class ExamSet implements Serializable {
     private int totalQuestions;
     private int durationMinutes;
     private int passingScore;
+    private Integer categoryId;
+    private String categoryName;
 
     public ExamSet() {
     }
@@ -59,6 +61,22 @@ public class ExamSet implements Serializable {
         this.passingScore = passingScore;
     }
 
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
     @Override
     public String toString() {
         return "ExamSet{" +
@@ -67,6 +85,8 @@ public class ExamSet implements Serializable {
                 ", totalQuestions=" + totalQuestions +
                 ", durationMinutes=" + durationMinutes +
                 ", passingScore=" + passingScore +
+                ", categoryId=" + categoryId +
+                ", categoryName='" + categoryName + '\'' +
                 '}';
     }
 }

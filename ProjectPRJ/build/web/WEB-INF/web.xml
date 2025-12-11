@@ -60,6 +60,15 @@
     </servlet-mapping>
     
     <servlet>
+        <servlet-name>ExamSetManagementServlet</servlet-name>
+        <servlet-class>serverlet.admin.ExamSetManagementServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExamSetManagementServlet</servlet-name>
+        <url-pattern>/admin/exams</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
         <servlet-name>LogoutServlet</servlet-name>
         <servlet-class>serverlet.common.LogoutServlet</servlet-class>
     </servlet>

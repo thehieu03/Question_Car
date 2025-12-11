@@ -1,15 +1,24 @@
 package serverlet.admin;
 
 import dao.ExamSetDAO;
+import dao.AnswerDAO;
+import dao.QuestionDAO;
+import dao.QuestionCategoryDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import model.ExamSet;
+import model.Question;
+import model.Answer;
+import model.QuestionCategory;
 import model.User;
 
 public class ExamSetManagementServlet extends HttpServlet {
@@ -24,6 +33,12 @@ public class ExamSetManagementServlet extends HttpServlet {
 
         if (admin == null || !admin.isAdmin()) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        if ("view".equals(action)) {
+            handleViewDetail(request, response);
             return;
         }
 
@@ -43,11 +58,14 @@ public class ExamSetManagementServlet extends HttpServlet {
         List<ExamSet> examSets = examSetDAO.getExamSets(offset, EXAMS_PER_PAGE);
         int totalExamSets = examSetDAO.getTotalExamSets();
         int totalPages = (int) Math.ceil((double) totalExamSets / EXAMS_PER_PAGE);
+        QuestionCategoryDAO categoryDAO = new QuestionCategoryDAO();
+        List<QuestionCategory> categories = categoryDAO.getAllCategories();
 
         request.setAttribute("examSets", examSets);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalExamSets", totalExamSets);
+        request.setAttribute("categories", categories);
 
         request.getRequestDispatcher("/admin/exam-management.jsp").forward(request, response);
     }
@@ -64,6 +82,7 @@ public class ExamSetManagementServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         ExamSetDAO examSetDAO = new ExamSetDAO();
+        QuestionDAO questionDAO = new QuestionDAO();
         boolean success = false;
         String message;
 
@@ -72,20 +91,62 @@ public class ExamSetManagementServlet extends HttpServlet {
             String totalQuestionsParam = request.getParameter("totalQuestions");
             String durationParam = request.getParameter("durationMinutes");
             String passingScoreParam = request.getParameter("passingScore");
+            String categoryIdParam = request.getParameter("categoryId");
 
             int totalQuestions = parsePositiveInt(totalQuestionsParam);
             int durationMinutes = parsePositiveInt(durationParam);
             int passingScore = parsePositiveInt(passingScoreParam);
+            int categoryId = parsePositiveInt(categoryIdParam);
 
             if (examName == null || examName.trim().isEmpty()) {
                 message = "Tên đề thi không được để trống.";
+            } else if (categoryId <= 0) {
+                message = "Vui lòng chọn loại đề (danh mục).";
             } else if (totalQuestions <= 0 || durationMinutes <= 0 || passingScore < 0) {
                 message = "Vui lòng nhập số hợp lệ cho tổng số câu, thời gian và điểm đạt.";
             } else if (passingScore > totalQuestions) {
                 message = "Điểm đạt không được lớn hơn tổng số câu hỏi.";
             } else {
-                success = examSetDAO.addExamSet(examName.trim(), totalQuestions, durationMinutes, passingScore);
-                message = success ? "Tạo đề thi mới thành công!" : "Tạo đề thi mới thất bại!";
+                int neededCritical = (int) Math.ceil(totalQuestions * 0.4);
+                int availableCritical = questionDAO.getTotalQuestionsFiltered(null, "critical", categoryId);
+                int availableNormal = questionDAO.getTotalQuestionsFiltered(null, "normal", categoryId);
+                int availableAll = availableCritical + availableNormal;
+
+                if (availableCritical < neededCritical) {
+                    message = "Không đủ câu điểm liệt. Cần " + neededCritical + ", hiện có " + availableCritical + ".";
+                } else if (availableAll < totalQuestions) {
+                    message = "Số câu hỏi khả dụng (" + availableAll + ") không đủ cho danh mục đã chọn.";
+                } else {
+                    success = examSetDAO.addExamSet(examName.trim(), totalQuestions, durationMinutes, passingScore);
+                    if (success) {
+                        int newExamSetId = examSetDAO.getLastInsertedExamSetId();
+                        List<Question> selectedQuestions = new ArrayList<>();
+                        selectedQuestions.addAll(
+                                questionDAO.getQuestionsFiltered(null, "critical", categoryId, 0, neededCritical)
+                        );
+                        selectedQuestions.addAll(
+                                questionDAO.getQuestionsFiltered(null, "normal", categoryId, 0, totalQuestions - neededCritical)
+                        );
+                        boolean linked = examSetDAO.addExamQuestions(newExamSetId, selectedQuestions);
+                        if (!linked) {
+                            message = "Tạo đề thi thất bại khi gán câu hỏi.";
+                            success = false;
+                        } else {
+                            message = "Tạo đề thi mới thành công!";
+                        }
+                    } else {
+                        message = "Tạo đề thi mới thất bại!";
+                    }
+                }
+            }
+        } else if ("delete".equals(action)) {
+            String examSetIdParam = request.getParameter("examSetId");
+            int examSetId = parsePositiveInt(examSetIdParam);
+            if (examSetId <= 0) {
+                message = "Exam set id không hợp lệ.";
+            } else {
+                success = examSetDAO.deleteExamSet(examSetId);
+                message = success ? "Xóa đề thi thành công!" : "Xóa đề thi thất bại!";
             }
         } else {
             message = "Hành động không hợp lệ.";
@@ -98,6 +159,39 @@ public class ExamSetManagementServlet extends HttpServlet {
         }
 
         doGet(request, response);
+    }
+
+    private void handleViewDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String examSetIdParam = request.getParameter("examSetId");
+        int examSetId;
+        try {
+            examSetId = Integer.parseInt(examSetIdParam);
+        } catch (NumberFormatException e) {
+            request.setAttribute("error", "Exam set id không hợp lệ.");
+            doGet(request, response);
+            return;
+        }
+
+        ExamSetDAO examSetDAO = new ExamSetDAO();
+        ExamSet examSet = examSetDAO.getExamSetById(examSetId);
+        if (examSet == null) {
+            request.setAttribute("error", "Không tìm thấy đề thi.");
+            doGet(request, response);
+            return;
+        }
+
+        List<Question> questions = examSetDAO.getQuestionsByExamSet(examSetId);
+        AnswerDAO answerDAO = new AnswerDAO();
+        Map<Integer, List<Answer>> answersMap = new HashMap<>();
+        for (Question q : questions) {
+            answersMap.put(q.getQuestionId(), answerDAO.getAnswersByQuestionId(q.getQuestionId()));
+        }
+
+        request.setAttribute("examSet", examSet);
+        request.setAttribute("questions", questions);
+        request.setAttribute("answersMap", answersMap);
+
+        request.getRequestDispatcher("/admin/exam-detail.jsp").forward(request, response);
     }
 
     private int parsePositiveInt(String value) {
