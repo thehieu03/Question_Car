@@ -142,5 +142,32 @@
         <servlet-name>UserHomeServlet</servlet-name>
         <url-pattern>/user/</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExamResultServlet</servlet-name>
+        <servlet-class>serverlet.user.ExamResultServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExamResultServlet</servlet-name>
+        <url-pattern>/user/exam/result</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExamHistoryServlet</servlet-name>
+        <servlet-class>serverlet.user.ExamHistoryServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExamHistoryServlet</servlet-name>
+        <url-pattern>/user/history</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CommentServlet</servlet-name>
+        <servlet-class>serverlet.user.CommentServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CommentServlet</servlet-name>
+        <url-pattern>/user/comment</url-pattern>
+    </servlet-mapping>
     
 </web-app>

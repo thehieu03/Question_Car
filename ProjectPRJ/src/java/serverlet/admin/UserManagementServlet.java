@@ -8,12 +8,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 import model.User;
 
 public class UserManagementServlet extends HttpServlet {
-    
-    private static final Logger logger = Logger.getLogger(UserManagementServlet.class.getName());
 
     private static final int USERS_PER_PAGE = 5;
 
@@ -22,7 +19,7 @@ public class UserManagementServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
-        
+
         if (admin == null || !admin.isAdmin()) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -31,7 +28,7 @@ public class UserManagementServlet extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         String keyword = request.getParameter("keyword");
         String pageParam = request.getParameter("page");
-        
+
         int page = 1;
         try {
             if (pageParam != null && !pageParam.trim().isEmpty()) {
@@ -40,24 +37,20 @@ public class UserManagementServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             page = 1;
         }
-        
+
         int offset = (page - 1) * USERS_PER_PAGE;
 
         List<User> users;
         int totalUsers;
-        
+
         if (keyword != null && !keyword.trim().isEmpty()) {
             String trimmedKeyword = keyword.trim();
             users = userDAO.searchUsers(trimmedKeyword, offset, USERS_PER_PAGE);
             totalUsers = userDAO.getTotalUsersBySearch(trimmedKeyword);
             request.setAttribute("keyword", trimmedKeyword);
-            logger.info("Searching for keyword: " + trimmedKeyword);
-            logger.info("Found " + users.size() + " users");
         } else {
             users = userDAO.getAllUsers(offset, USERS_PER_PAGE);
             totalUsers = userDAO.getTotalUsers();
-            logger.info("Getting all users, total: " + totalUsers);
-            logger.info("Returned " + users.size() + " users");
         }
 
         int totalPages = (int) Math.ceil((double) totalUsers / USERS_PER_PAGE);
@@ -75,7 +68,7 @@ public class UserManagementServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
-        
+
         if (admin == null || !admin.isAdmin()) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -94,6 +87,16 @@ public class UserManagementServlet extends HttpServlet {
             int userId = Integer.parseInt(request.getParameter("userId"));
             success = userDAO.unbanUser(userId);
             message = success ? "Đã gỡ cấm người dùng thành công!" : "Gỡ cấm người dùng thất bại!";
+        } else if ("delete".equals(action)) {
+            int userId = Integer.parseInt(request.getParameter("userId"));
+            User userToDelete = userDAO.getUserById(userId);
+            if (userToDelete != null && userToDelete.isAdmin()) {
+                message = "Không thể xóa tài khoản Admin!";
+                success = false;
+            } else {
+                success = userDAO.deleteUser(userId);
+                message = success ? "Đã xóa người dùng thành công!" : "Xóa người dùng thất bại!";
+            }
         } else if ("update".equals(action)) {
             int userId = Integer.parseInt(request.getParameter("userId"));
             String username = request.getParameter("username");
@@ -112,4 +115,3 @@ public class UserManagementServlet extends HttpServlet {
         doGet(request, response);
     }
 }
-

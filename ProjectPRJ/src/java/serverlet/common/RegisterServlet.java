@@ -2,7 +2,6 @@ package serverlet.common;
 
 import dao.UserDAO;
 import java.io.IOException;
-import java.util.logging.Logger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,8 +10,6 @@ import jakarta.servlet.http.HttpSession;
 import model.User;
 
 public class RegisterServlet extends HttpServlet {
-    
-    private static final Logger logger = Logger.getLogger(RegisterServlet.class.getName());
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -27,46 +24,38 @@ public class RegisterServlet extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
-        
+
         UserDAO userDAO = new UserDAO();
-        
+
         if (password == null || !password.equals(confirmPassword)) {
             request.setAttribute("error", "Mật khẩu xác nhận không khớp!");
             request.getRequestDispatcher("/common/register.jsp").forward(request, response);
             return;
         }
-        
+
         if (userDAO.getUserByUsername(username) != null) {
             request.setAttribute("error", "Tên đăng nhập đã tồn tại!");
             request.getRequestDispatcher("/common/register.jsp").forward(request, response);
             return;
         }
-        
+
         if (userDAO.getUserByEmail(email) != null) {
             request.setAttribute("error", "Email đã được sử dụng!");
             request.getRequestDispatcher("/common/register.jsp").forward(request, response);
             return;
         }
-        
-        logger.info("=== Register Attempt ===");
-        logger.info("Username: " + username);
-        logger.info("Email: " + email);
-        
+
         boolean success = userDAO.register(username, email, password);
-        logger.info("Register result: " + success);
-        
+
         if (success) {
-            logger.info("Registration successful, redirecting to login page");
             request.setAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
             request.setAttribute("username", username);
             request.getRequestDispatcher("/common/login.jsp").forward(request, response);
         } else {
-            logger.warning("Registration failed!");
-            request.setAttribute("error", "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau! (Xem log server để biết chi tiết)");
+            request.setAttribute("error", "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau!");
             request.setAttribute("username", username);
             request.setAttribute("email", email);
             request.getRequestDispatcher("/common/register.jsp").forward(request, response);
         }
     }
 }
-

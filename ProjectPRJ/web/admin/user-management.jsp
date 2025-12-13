@@ -250,22 +250,13 @@
                 background: #f57c00;
             }
 
-            .btn-ban {
-                background: #f44336;
-                color: white;
-            }
-
-            .btn-ban:hover {
+            .btn-delete {
                 background: #d32f2f;
-            }
-
-            .btn-unban {
-                background: #4caf50;
                 color: white;
             }
 
-            .btn-unban:hover {
-                background: #388e3c;
+            .btn-delete:hover {
+                background: #b71c1c;
             }
 
             .pagination {
@@ -563,20 +554,12 @@
                                                     onclick="openEditModalFromButton(this)">
                                                 <i class="fas fa-edit"></i> Sửa
                                             </button>
-                                            <% if (u.getRole() != -1) { %>
+                                            <% if (u.getRole() != 1) { %>
                                             <form method="POST" action="<%= request.getContextPath() %>/admin/users" style="display: inline;">
-                                                <input type="hidden" name="action" value="ban">
+                                                <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="userId" value="<%= u.getUserId() %>">
-                                                <button type="submit" class="btn btn-ban" onclick="return confirm('Bạn có chắc muốn cấm người dùng này?')">
-                                                    <i class="fas fa-ban"></i> Cấm
-                                                </button>
-                                            </form>
-                                            <% } else { %>
-                                            <form method="POST" action="<%= request.getContextPath() %>/admin/users" style="display: inline;">
-                                                <input type="hidden" name="action" value="unban">
-                                                <input type="hidden" name="userId" value="<%= u.getUserId() %>">
-                                                <button type="submit" class="btn btn-unban" onclick="return confirm('Bạn có chắc muốn gỡ cấm người dùng này?')">
-                                                    <i class="fas fa-check"></i> Gỡ cấm
+                                                <button type="submit" class="btn btn-delete" onclick="return confirmDelete('<%= u.getUsername() %>')">
+                                                    <i class="fas fa-trash"></i> Xóa
                                                 </button>
                                             </form>
                                             <% } %>
@@ -755,6 +738,16 @@
                     return false;
                 }
                 return true;
+            }
+
+            function confirmDelete(username) {
+                return confirm('Bạn có chắc chắn muốn XÓA vĩnh viễn người dùng "' + username + '"?\n\n' +
+                    'Hành động này sẽ xóa:\n' +
+                    '- Tất cả bài thi đã làm\n' +
+                    '- Tất cả câu trả lời\n' +
+                    '- Tất cả bình luận\n' +
+                    '- Tài khoản người dùng\n\n' +
+                    'Hành động này KHÔNG THỂ hoàn tác!');
             }
         </script>
     </body>

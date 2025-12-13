@@ -8,13 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import model.Answer;
 
 public class AnswerDAO extends DBContext implements IAnswerDAO {
-    
-    private static final Logger logger = Logger.getLogger(AnswerDAO.class.getName());
 
     @Override
     public List<Answer> getAnswersByQuestionId(int questionId) {
@@ -28,7 +24,7 @@ public class AnswerDAO extends DBContext implements IAnswerDAO {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, questionId);
             ResultSet rs = ps.executeQuery();
-            
+
             while (rs.next()) {
                 Answer answer = new Answer();
                 answer.setAnswerId(rs.getInt("answer_id"));
@@ -39,7 +35,6 @@ public class AnswerDAO extends DBContext implements IAnswerDAO {
                 answers.add(answer);
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting answers by question id", ex);
         }
         return answers;
     }
@@ -60,7 +55,6 @@ public class AnswerDAO extends DBContext implements IAnswerDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error adding answer", ex);
         }
         return false;
     }
@@ -81,7 +75,6 @@ public class AnswerDAO extends DBContext implements IAnswerDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error updating answer", ex);
         }
         return false;
     }
@@ -99,7 +92,6 @@ public class AnswerDAO extends DBContext implements IAnswerDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error deleting answer", ex);
         }
         return false;
     }
@@ -117,9 +109,7 @@ public class AnswerDAO extends DBContext implements IAnswerDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error deleting answers by question id", ex);
         }
         return false;
     }
 }
-

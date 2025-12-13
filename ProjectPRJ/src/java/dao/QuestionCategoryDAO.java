@@ -8,13 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import model.QuestionCategory;
 
 public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryDAO {
-    
-    private static final Logger logger = Logger.getLogger(QuestionCategoryDAO.class.getName());
 
     @Override
     public List<QuestionCategory> getAllCategories() {
@@ -27,7 +23,7 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
             }
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
-            
+
             while (rs.next()) {
                 QuestionCategory category = new QuestionCategory();
                 category.setCategoryId(rs.getInt("category_id"));
@@ -35,7 +31,6 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
                 categories.add(category);
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting all categories", ex);
         }
         return categories;
     }
@@ -51,7 +46,7 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, categoryId);
             ResultSet rs = ps.executeQuery();
-            
+
             if (rs.next()) {
                 QuestionCategory category = new QuestionCategory();
                 category.setCategoryId(rs.getInt("category_id"));
@@ -59,7 +54,6 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
                 return category;
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting category by id", ex);
         }
         return null;
     }
@@ -77,7 +71,6 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error adding category", ex);
         }
         return false;
     }
@@ -96,7 +89,6 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error updating category", ex);
         }
         return false;
     }
@@ -114,7 +106,6 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error deleting category", ex);
         }
         return false;
     }
@@ -129,14 +120,12 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
             }
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
-            
+
             if (rs.next()) {
                 return rs.getInt("total");
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting total categories", ex);
         }
         return 0;
     }
 }
-

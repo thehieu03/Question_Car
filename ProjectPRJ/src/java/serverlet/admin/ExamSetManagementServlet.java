@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import model.ExamSet;
 import model.Question;
 import model.Answer;
@@ -23,11 +22,11 @@ import model.User;
 
 public class ExamSetManagementServlet extends HttpServlet {
 
-    private static final Logger logger = Logger.getLogger(ExamSetManagementServlet.class.getName());
     private static final int EXAMS_PER_PAGE = 10;
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
 
@@ -71,7 +70,8 @@ public class ExamSetManagementServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
 
@@ -122,11 +122,10 @@ public class ExamSetManagementServlet extends HttpServlet {
                         int newExamSetId = examSetDAO.getLastInsertedExamSetId();
                         List<Question> selectedQuestions = new ArrayList<>();
                         selectedQuestions.addAll(
-                                questionDAO.getQuestionsFiltered(null, "critical", categoryId, 0, neededCritical)
-                        );
+                                questionDAO.getQuestionsFiltered(null, "critical", categoryId, 0, neededCritical));
                         selectedQuestions.addAll(
-                                questionDAO.getQuestionsFiltered(null, "normal", categoryId, 0, totalQuestions - neededCritical)
-                        );
+                                questionDAO.getQuestionsFiltered(null, "normal", categoryId, 0,
+                                        totalQuestions - neededCritical));
                         boolean linked = examSetDAO.addExamQuestions(newExamSetId, selectedQuestions);
                         if (!linked) {
                             message = "Tạo đề thi thất bại khi gán câu hỏi.";
@@ -161,7 +160,8 @@ public class ExamSetManagementServlet extends HttpServlet {
         doGet(request, response);
     }
 
-    private void handleViewDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void handleViewDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String examSetIdParam = request.getParameter("examSetId");
         int examSetId;
         try {
@@ -201,10 +201,7 @@ public class ExamSetManagementServlet extends HttpServlet {
             }
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException ex) {
-            logger.fine("Invalid number format: " + value);
             return -1;
         }
     }
 }
-
-

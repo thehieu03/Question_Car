@@ -8,13 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import model.Question;
 
 public class QuestionDAO extends DBContext implements IQuestionDAO {
-    
-    private static final Logger logger = Logger.getLogger(QuestionDAO.class.getName());
 
     @Override
     public int getTotalQuestions() {
@@ -47,7 +43,7 @@ public class QuestionDAO extends DBContext implements IQuestionDAO {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, questionId);
             ResultSet rs = ps.executeQuery();
-            
+
             if (rs.next()) {
                 Question question = new Question();
                 question.setQuestionId(rs.getInt("question_id"));
@@ -59,13 +55,13 @@ public class QuestionDAO extends DBContext implements IQuestionDAO {
                 return question;
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting question by id", ex);
         }
         return null;
     }
 
     @Override
-    public boolean addQuestion(int categoryId, String questionText, String questionImage, String explanation, boolean isCritical) {
+    public boolean addQuestion(int categoryId, String questionText, String questionImage, String explanation,
+            boolean isCritical) {
         String sql = "INSERT INTO Questions (category_id, question_text, question_image, explanation, is_critical) VALUES (?, ?, ?, ?, ?)";
         try {
             Connection conn = getConnection();
@@ -81,13 +77,13 @@ public class QuestionDAO extends DBContext implements IQuestionDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error adding question", ex);
         }
         return false;
     }
 
     @Override
-    public boolean updateQuestion(int questionId, int categoryId, String questionText, String questionImage, String explanation, boolean isCritical) {
+    public boolean updateQuestion(int questionId, int categoryId, String questionText, String questionImage,
+            String explanation, boolean isCritical) {
         String sql = "UPDATE Questions SET category_id = ?, question_text = ?, question_image = ?, explanation = ?, is_critical = ? WHERE question_id = ?";
         try {
             Connection conn = getConnection();
@@ -104,7 +100,6 @@ public class QuestionDAO extends DBContext implements IQuestionDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error updating question", ex);
         }
         return false;
     }
@@ -122,7 +117,6 @@ public class QuestionDAO extends DBContext implements IQuestionDAO {
             int result = ps.executeUpdate();
             return result > 0;
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error deleting question", ex);
         }
         return false;
     }
@@ -178,7 +172,6 @@ public class QuestionDAO extends DBContext implements IQuestionDAO {
                 questions.add(question);
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting filtered questions", ex);
         }
 
         return questions;
@@ -223,11 +216,8 @@ public class QuestionDAO extends DBContext implements IQuestionDAO {
                 return rs.getInt("total");
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting total filtered questions", ex);
         }
 
         return 0;
     }
 }
-
-

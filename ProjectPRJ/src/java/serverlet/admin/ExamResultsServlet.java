@@ -8,17 +8,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 import model.User;
 import model.UserExam;
 
 public class ExamResultsServlet extends HttpServlet {
-
-    private static final Logger logger = Logger.getLogger(ExamResultsServlet.class.getName());
     private static final int RESULTS_PER_PAGE = 10;
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
         if (admin == null || !admin.isAdmin()) {
@@ -51,5 +49,3 @@ public class ExamResultsServlet extends HttpServlet {
         request.getRequestDispatcher("/admin/exam-results.jsp").forward(request, response);
     }
 }
-
-

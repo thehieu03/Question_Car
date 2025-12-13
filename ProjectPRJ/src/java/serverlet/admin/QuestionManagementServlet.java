@@ -15,15 +15,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import model.Question;
 import model.QuestionCategory;
 import model.User;
 
 public class QuestionManagementServlet extends HttpServlet {
-    
-    private static final Logger logger = Logger.getLogger(QuestionManagementServlet.class.getName());
 
     private static final int QUESTIONS_PER_PAGE = 10;
 
@@ -32,7 +28,7 @@ public class QuestionManagementServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
-        
+
         if (admin == null || !admin.isAdmin()) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -43,7 +39,7 @@ public class QuestionManagementServlet extends HttpServlet {
             AnswerDAO answerDAO = new AnswerDAO();
             int questionId = Integer.parseInt(request.getParameter("questionId"));
             List<model.Answer> answers = answerDAO.getAnswersByQuestionId(questionId);
-            
+
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             java.io.PrintWriter out = response.getWriter();
@@ -67,12 +63,12 @@ public class QuestionManagementServlet extends HttpServlet {
 
         QuestionDAO questionDAO = new QuestionDAO();
         QuestionCategoryDAO categoryDAO = new QuestionCategoryDAO();
-        
+
         String keyword = request.getParameter("keyword");
         String type = request.getParameter("type");
         String categoryIdParam = request.getParameter("categoryId");
         String pageParam = request.getParameter("page");
-        
+
         if (type == null || type.trim().isEmpty()) {
             type = "all";
         } else {
@@ -93,7 +89,7 @@ public class QuestionManagementServlet extends HttpServlet {
                 categoryId = null;
             }
         }
-        
+
         int page = 1;
         try {
             if (pageParam != null && !pageParam.trim().isEmpty()) {
@@ -102,12 +98,12 @@ public class QuestionManagementServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             page = 1;
         }
-        
+
         int offset = (page - 1) * QUESTIONS_PER_PAGE;
 
         List<Question> questions;
         int totalQuestions;
-        
+
         String trimmedKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         questions = questionDAO.getQuestionsFiltered(trimmedKeyword, type, categoryId, offset, QUESTIONS_PER_PAGE);
         totalQuestions = questionDAO.getTotalQuestionsFiltered(trimmedKeyword, type, categoryId);
@@ -137,7 +133,7 @@ public class QuestionManagementServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
-        
+
         if (admin == null || !admin.isAdmin()) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -159,10 +155,10 @@ public class QuestionManagementServlet extends HttpServlet {
             String questionImage = request.getParameter("questionImage");
             String explanation = request.getParameter("explanation");
             boolean isCritical = "on".equals(request.getParameter("isCritical"));
-            
+
             success = questionDAO.addQuestion(categoryId, questionText, questionImage, explanation, isCritical);
-            
-                if (success) {
+
+            if (success) {
                 int newQuestionId = getLastInsertedQuestionId(questionDAO);
                 if (newQuestionId > 0) {
                     String correctAnswer = request.getParameter("correctAnswer");
@@ -193,9 +189,10 @@ public class QuestionManagementServlet extends HttpServlet {
             String questionImage = request.getParameter("questionImage");
             String explanation = request.getParameter("explanation");
             boolean isCritical = "on".equals(request.getParameter("isCritical"));
-            
-            success = questionDAO.updateQuestion(questionId, categoryId, questionText, questionImage, explanation, isCritical);
-            
+
+            success = questionDAO.updateQuestion(questionId, categoryId, questionText, questionImage, explanation,
+                    isCritical);
+
             if (success) {
                 answerDAO.deleteAnswersByQuestionId(questionId);
                 String correctAnswer = request.getParameter("correctAnswer");
@@ -228,7 +225,7 @@ public class QuestionManagementServlet extends HttpServlet {
 
         doGet(request, response);
     }
-    
+
     private int getLastInsertedQuestionId(QuestionDAO questionDAO) {
         String sql = "SELECT MAX(question_id) AS last_id FROM Questions";
         try {
@@ -243,9 +240,7 @@ public class QuestionManagementServlet extends HttpServlet {
                 return rs.getInt("last_id");
             }
         } catch (SQLException ex) {
-            logger.log(Level.SEVERE, "Error getting last question id", ex);
         }
         return 0;
     }
 }
-

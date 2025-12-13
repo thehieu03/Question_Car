@@ -10,18 +10,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 import model.ExamSet;
 import model.QuestionCategory;
 import model.User;
 
 public class ExamSelectionServlet extends HttpServlet {
-
-    private static final Logger logger = Logger.getLogger(ExamSelectionServlet.class.getName());
     private static final int EXAMS_PER_PAGE = 10;
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -82,5 +80,3 @@ public class ExamSelectionServlet extends HttpServlet {
         request.getRequestDispatcher("/user/exam-selection.jsp").forward(request, response);
     }
 }
-
-
