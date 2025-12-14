@@ -12,6 +12,13 @@ import model.User;
 
 public class UserDAO extends DBContext implements IUserDAO {
 
+    /**
+     * Lấy tổng số lượng người dùng trong hệ thống (không bao gồm admin).
+     * Hàm này đếm tất cả các user có role khác 1 (role = 1 là admin).
+     * 
+     * @return Tổng số lượng người dùng (user), trả về 0 nếu có lỗi hoặc không có
+     *         kết nối database
+     */
     public int getTotalUsers() {
         String sql = "SELECT COUNT(*) AS total FROM Users WHERE role != 1";
         try {
@@ -30,6 +37,17 @@ public class UserDAO extends DBContext implements IUserDAO {
         return 0;
     }
 
+    /**
+     * Xác thực đăng nhập người dùng bằng username và password.
+     * Hàm này kiểm tra thông tin đăng nhập và trả về đối tượng User nếu hợp lệ.
+     * 
+     * @param username Tên đăng nhập của người dùng (sẽ được trim để loại bỏ khoảng
+     *                 trắng)
+     * @param password Mật khẩu của người dùng (sẽ được trim để loại bỏ khoảng
+     *                 trắng)
+     * @return Đối tượng User nếu đăng nhập thành công, null nếu thông tin không hợp
+     *         lệ hoặc không tìm thấy
+     */
     public User login(String username, String password) {
         if (username == null || password == null) {
             return null;
@@ -71,6 +89,14 @@ public class UserDAO extends DBContext implements IUserDAO {
         return null;
     }
 
+    /**
+     * Lấy thông tin người dùng theo tên đăng nhập (username).
+     * Hàm này tìm kiếm user trong database dựa trên username chính xác.
+     * 
+     * @param username Tên đăng nhập cần tìm (sẽ được trim để loại bỏ khoảng trắng)
+     * @return Đối tượng User nếu tìm thấy, null nếu không tìm thấy hoặc username
+     *         rỗng/null
+     */
     public User getUserByUsername(String username) {
         if (username == null || username.trim().isEmpty()) {
             return null;
@@ -101,6 +127,13 @@ public class UserDAO extends DBContext implements IUserDAO {
         return null;
     }
 
+    /**
+     * Lấy thông tin người dùng theo địa chỉ email.
+     * Hàm này tìm kiếm user trong database dựa trên email chính xác.
+     * 
+     * @param email Địa chỉ email cần tìm
+     * @return Đối tượng User nếu tìm thấy, null nếu không tìm thấy hoặc có lỗi
+     */
     public User getUserByEmail(String email) {
         String sql = "SELECT * FROM Users WHERE email = ?";
         try {
@@ -126,6 +159,17 @@ public class UserDAO extends DBContext implements IUserDAO {
         return null;
     }
 
+    /**
+     * Đăng ký tài khoản người dùng mới.
+     * Hàm này kiểm tra username và email có tồn tại chưa, nếu chưa thì tạo tài
+     * khoản mới với role = 0 (USER).
+     * 
+     * @param username Tên đăng nhập mới (phải là duy nhất)
+     * @param email    Địa chỉ email mới (phải là duy nhất)
+     * @param password Mật khẩu của tài khoản mới
+     * @return true nếu đăng ký thành công, false nếu username/email đã tồn tại hoặc
+     *         có lỗi xảy ra
+     */
     public boolean register(String username, String email, String password) {
         String sql = "INSERT INTO Users (username, email, password, role) VALUES (?, ?, ?, 0)";
         PreparedStatement ps = null;
@@ -171,6 +215,16 @@ public class UserDAO extends DBContext implements IUserDAO {
         }
     }
 
+    /**
+     * Lấy danh sách tất cả người dùng với phân trang (không bao gồm admin).
+     * Hàm này trả về danh sách user được sắp xếp theo user_id, bỏ qua các user có
+     * role = 1 (admin).
+     * 
+     * @param offset Số lượng bản ghi cần bỏ qua (dùng cho phân trang)
+     * @param limit  Số lượng bản ghi tối đa cần lấy
+     * @return Danh sách các đối tượng User, danh sách rỗng nếu không có dữ liệu
+     *         hoặc có lỗi
+     */
     @Override
     public List<User> getAllUsers(int offset, int limit) {
         List<User> users = new ArrayList<>();
@@ -199,6 +253,17 @@ public class UserDAO extends DBContext implements IUserDAO {
         return users;
     }
 
+    /**
+     * Tìm kiếm người dùng theo từ khóa (username hoặc email) với phân trang.
+     * Hàm này tìm kiếm user có username hoặc email chứa từ khóa (không phân biệt
+     * hoa thường).
+     * 
+     * @param keyword Từ khóa tìm kiếm (có thể là một phần của username hoặc email)
+     * @param offset  Số lượng bản ghi cần bỏ qua (dùng cho phân trang)
+     * @param limit   Số lượng bản ghi tối đa cần lấy
+     * @return Danh sách các đối tượng User khớp với từ khóa, danh sách rỗng nếu
+     *         không tìm thấy
+     */
     @Override
     public List<User> searchUsers(String keyword, int offset, int limit) {
         List<User> users = new ArrayList<>();
@@ -230,6 +295,15 @@ public class UserDAO extends DBContext implements IUserDAO {
         return users;
     }
 
+    /**
+     * Lấy tổng số lượng người dùng khớp với từ khóa tìm kiếm (không bao gồm admin).
+     * Hàm này đếm số user có username hoặc email chứa từ khóa, dùng để tính tổng số
+     * trang khi phân trang.
+     * 
+     * @param keyword Từ khóa tìm kiếm
+     * @return Tổng số lượng user khớp với từ khóa, trả về 0 nếu không tìm thấy hoặc
+     *         có lỗi
+     */
     @Override
     public int getTotalUsersBySearch(String keyword) {
         String sql = "SELECT COUNT(*) AS total FROM Users WHERE role != 1 AND (username LIKE ? OR email LIKE ?)";
@@ -252,6 +326,13 @@ public class UserDAO extends DBContext implements IUserDAO {
         return 0;
     }
 
+    /**
+     * Cấm người dùng bằng cách đặt role = -1.
+     * Hàm này vô hiệu hóa tài khoản user, ngăn họ đăng nhập vào hệ thống.
+     * 
+     * @param userId ID của người dùng cần cấm
+     * @return true nếu cấm thành công, false nếu có lỗi hoặc không tìm thấy user
+     */
     @Override
     public boolean banUser(int userId) {
         String sql = "UPDATE Users SET role = -1 WHERE user_id = ?";
@@ -269,6 +350,13 @@ public class UserDAO extends DBContext implements IUserDAO {
         return false;
     }
 
+    /**
+     * Gỡ cấm người dùng bằng cách đặt role = 0 (USER).
+     * Hàm này khôi phục quyền truy cập cho user đã bị cấm.
+     * 
+     * @param userId ID của người dùng cần gỡ cấm
+     * @return true nếu gỡ cấm thành công, false nếu có lỗi hoặc không tìm thấy user
+     */
     @Override
     public boolean unbanUser(int userId) {
         String sql = "UPDATE Users SET role = 0 WHERE user_id = ?";
@@ -286,6 +374,18 @@ public class UserDAO extends DBContext implements IUserDAO {
         return false;
     }
 
+    /**
+     * Cập nhật thông tin người dùng (username, email, role).
+     * Hàm này kiểm tra username và email mới có trùng với user khác không trước khi
+     * cập nhật.
+     * 
+     * @param userId   ID của người dùng cần cập nhật
+     * @param username Tên đăng nhập mới (phải là duy nhất nếu thay đổi)
+     * @param email    Địa chỉ email mới (phải là duy nhất nếu thay đổi)
+     * @param role     Vai trò mới của user (0 = USER, 1 = ADMIN, -1 = BANNED)
+     * @return true nếu cập nhật thành công, false nếu username/email trùng hoặc có
+     *         lỗi
+     */
     @Override
     public boolean updateUser(int userId, String username, String email, int role) {
         String sql = "UPDATE Users SET username = ?, email = ?, role = ? WHERE user_id = ?";
@@ -324,6 +424,14 @@ public class UserDAO extends DBContext implements IUserDAO {
         return false;
     }
 
+    /**
+     * Lấy thông tin người dùng theo ID.
+     * Hàm này trả về đầy đủ thông tin của user bao gồm user_id, username, email,
+     * password, role.
+     * 
+     * @param userId ID của người dùng cần lấy thông tin
+     * @return Đối tượng User nếu tìm thấy, null nếu không tìm thấy hoặc có lỗi
+     */
     @Override
     public User getUserById(int userId) {
         String sql = "SELECT * FROM Users WHERE user_id = ?";
@@ -350,6 +458,22 @@ public class UserDAO extends DBContext implements IUserDAO {
         return null;
     }
 
+    /**
+     * Xóa người dùng và tất cả dữ liệu liên quan.
+     * Hàm này xóa user cùng với tất cả bài thi, câu trả lời và bình luận của user
+     * đó.
+     * Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu.
+     * Không cho phép xóa admin (role = 1).
+     * 
+     * Thứ tự xóa:
+     * 1. Xóa tất cả câu trả lời (UserAnswers) của user
+     * 2. Xóa tất cả bài thi (UserExams) của user
+     * 3. Xóa tất cả bình luận (ExamSetComments) của user
+     * 4. Cuối cùng xóa user (Users)
+     * 
+     * @param userId ID của người dùng cần xóa
+     * @return true nếu xóa thành công, false nếu user là admin hoặc có lỗi xảy ra
+     */
     public boolean deleteUser(int userId) {
         // Không cho phép xóa admin
         User user = getUserById(userId);

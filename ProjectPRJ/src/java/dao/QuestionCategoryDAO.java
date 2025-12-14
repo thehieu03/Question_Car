@@ -12,6 +12,13 @@ import model.QuestionCategory;
 
 public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryDAO {
 
+    /**
+     * Lấy danh sách tất cả danh mục câu hỏi, sắp xếp theo category_id.
+     * Hàm này trả về tất cả danh mục trong hệ thống (ví dụ: Ô tô, Xe máy).
+     * 
+     * @return Danh sách các đối tượng QuestionCategory, danh sách rỗng nếu không có
+     *         dữ liệu
+     */
     @Override
     public List<QuestionCategory> getAllCategories() {
         List<QuestionCategory> categories = new ArrayList<>();
@@ -35,6 +42,13 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
         return categories;
     }
 
+    /**
+     * Lấy thông tin chi tiết của một danh mục câu hỏi theo ID.
+     * 
+     * @param categoryId ID của danh mục cần lấy thông tin
+     * @return Đối tượng QuestionCategory nếu tìm thấy, null nếu không tìm thấy hoặc
+     *         có lỗi
+     */
     @Override
     public QuestionCategory getCategoryById(int categoryId) {
         String sql = "SELECT * FROM QuestionCategories WHERE category_id = ?";
@@ -58,6 +72,12 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
         return null;
     }
 
+    /**
+     * Thêm một danh mục câu hỏi mới vào hệ thống.
+     * 
+     * @param categoryName Tên danh mục mới (ví dụ: "Ô tô", "Xe máy")
+     * @return true nếu thêm thành công, false nếu có lỗi
+     */
     @Override
     public boolean addCategory(String categoryName) {
         String sql = "INSERT INTO QuestionCategories (category_name) VALUES (?)";
@@ -75,6 +95,13 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
         return false;
     }
 
+    /**
+     * Cập nhật tên của một danh mục câu hỏi.
+     * 
+     * @param categoryId   ID của danh mục cần cập nhật
+     * @param categoryName Tên danh mục mới
+     * @return true nếu cập nhật thành công, false nếu có lỗi
+     */
     @Override
     public boolean updateCategory(int categoryId, String categoryName) {
         String sql = "UPDATE QuestionCategories SET category_name = ? WHERE category_id = ?";
@@ -93,6 +120,13 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
         return false;
     }
 
+    /**
+     * Xóa một danh mục câu hỏi khỏi hệ thống.
+     * Lưu ý: Cần đảm bảo không còn câu hỏi nào thuộc danh mục này trước khi xóa.
+     * 
+     * @param categoryId ID của danh mục cần xóa
+     * @return true nếu xóa thành công, false nếu có lỗi
+     */
     @Override
     public boolean deleteCategory(int categoryId) {
         String sql = "DELETE FROM QuestionCategories WHERE category_id = ?";
@@ -110,6 +144,11 @@ public class QuestionCategoryDAO extends DBContext implements IQuestionCategoryD
         return false;
     }
 
+    /**
+     * Lấy tổng số lượng danh mục câu hỏi trong hệ thống.
+     * 
+     * @return Tổng số lượng danh mục, trả về 0 nếu không có dữ liệu hoặc có lỗi
+     */
     @Override
     public int getTotalCategories() {
         String sql = "SELECT COUNT(*) AS total FROM QuestionCategories";
