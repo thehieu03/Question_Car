@@ -10,10 +10,32 @@ import java.io.IOException;
 import java.util.List;
 import model.User;
 
+/**
+ * Servlet quản lý người dùng cho admin.
+ * Servlet này xử lý:
+ * - GET: Hiển thị danh sách người dùng với tìm kiếm và phân trang
+ * - POST: Xử lý các thao tác: cập nhật, xóa người dùng
+ */
 public class UserManagementServlet extends HttpServlet {
 
+    /** Số lượng người dùng hiển thị trên mỗi trang */
     private static final int USERS_PER_PAGE = 5;
 
+    /**
+     * Hiển thị trang quản lý người dùng.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập và là admin chưa
+     * 2. Lấy từ khóa tìm kiếm và số trang từ request
+     * 3. Nếu có từ khóa: tìm kiếm user theo username/email
+     * 4. Nếu không có từ khóa: lấy tất cả user
+     * 5. Tính tổng số trang
+     * 6. Forward đến trang user-management.jsp với danh sách user
+     * 
+     * @param request  HttpServletRequest chứa keyword và page
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -63,6 +85,20 @@ public class UserManagementServlet extends HttpServlet {
         request.getRequestDispatcher("/admin/user-management.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý các thao tác quản lý người dùng.
+     * Hàm này xử lý các action:
+     * - "ban": Cấm người dùng (set role = -1)
+     * - "unban": Gỡ cấm người dùng (set role = 0)
+     * - "delete": Xóa người dùng và tất cả dữ liệu liên quan
+     * - "update": Cập nhật thông tin người dùng (username, email, role)
+     * Sau khi xử lý, gọi doGet() để hiển thị lại danh sách với thông báo kết quả.
+     * 
+     * @param request  HttpServletRequest chứa action và các thông tin liên quan
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

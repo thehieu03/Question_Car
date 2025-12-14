@@ -9,8 +9,27 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import model.User;
 
+/**
+ * Servlet xử lý bình luận của người dùng về đề thi.
+ * Servlet này chỉ xử lý POST request để thêm bình luận mới.
+ */
 public class CommentServlet extends HttpServlet {
 
+    /**
+     * Xử lý yêu cầu thêm bình luận về đề thi.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập chưa
+     * 2. Lấy examSetId, content và userExamId từ request
+     * 3. Kiểm tra examSetId hợp lệ
+     * 4. Nếu content không rỗng: gọi ExamSetCommentDAO.addComment() để thêm bình
+     * luận
+     * 5. Redirect về trang kết quả bài thi hoặc trang lịch sử tùy theo userExamId
+     * 
+     * @param request  HttpServletRequest chứa examSetId, content và userExamId
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

@@ -19,8 +19,32 @@ import model.Question;
 import model.User;
 import model.UserExam;
 
+/**
+ * Servlet xử lý bắt đầu và nộp bài thi.
+ * Servlet này xử lý:
+ * - GET: Hiển thị trang làm bài thi (bắt đầu bài thi mới hoặc tiếp tục bài thi
+ * đang làm)
+ * - POST: Xử lý nộp bài thi (tính điểm và lưu kết quả)
+ */
 public class ExamStartServlet extends HttpServlet {
 
+    /**
+     * Hiển thị trang làm bài thi.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập chưa
+     * 2. Lấy examSetId từ request và kiểm tra tính hợp lệ
+     * 3. Kiểm tra xem có bài thi đang làm dở không (status = IN_PROGRESS)
+     * - Nếu có: tiếp tục bài thi đó
+     * - Nếu không: tạo bài thi mới
+     * 4. Lấy danh sách câu hỏi của đề thi
+     * 5. Lấy đáp án cho từng câu hỏi
+     * 6. Forward đến trang exam-start.jsp với tất cả dữ liệu
+     * 
+     * @param request  HttpServletRequest chứa examSetId
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -92,6 +116,27 @@ public class ExamStartServlet extends HttpServlet {
         request.getRequestDispatcher("/user/exam-start.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý nộp bài thi.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập chưa
+     * 2. Lấy userExamId từ request và kiểm tra tính hợp lệ
+     * 3. Kiểm tra bài thi thuộc về user và có status = IN_PROGRESS
+     * 4. Lấy danh sách câu hỏi của đề thi
+     * 5. Xử lý từng câu trả lời:
+     * - Lấy answerId từ request
+     * - Kiểm tra đáp án đúng/sai
+     * - Lưu câu trả lời vào database
+     * - Đếm số câu đúng/sai
+     * 6. Tính điểm (số câu đúng) và kiểm tra đỗ/trượt
+     * 7. Gọi submitExam() để cập nhật kết quả cuối cùng
+     * 8. Redirect đến trang kết quả nếu thành công
+     * 
+     * @param request  HttpServletRequest chứa userExamId và các câu trả lời
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

@@ -10,14 +10,44 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
 
+/**
+ * Servlet xử lý đăng nhập người dùng.
+ * Servlet này xử lý cả GET (hiển thị form đăng nhập) và POST (xác thực đăng
+ * nhập).
+ */
 public class LoginServlet extends HttpServlet {
 
+    /**
+     * Hiển thị trang đăng nhập.
+     * Forward request đến trang login.jsp để hiển thị form đăng nhập.
+     * 
+     * @param request  HttpServletRequest
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.getRequestDispatcher("/common/login.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý yêu cầu đăng nhập từ form.
+     * Hàm này:
+     * 1. Lấy username và password từ request
+     * 2. Gọi UserDAO.login() để xác thực
+     * 3. Nếu đăng nhập thành công:
+     * - Lưu user vào session
+     * - Tạo cookie lưu username và role (thời hạn 24 giờ)
+     * - Redirect đến trang admin hoặc user tùy theo role
+     * 4. Nếu đăng nhập thất bại: hiển thị thông báo lỗi và forward lại trang login
+     * 
+     * @param request  HttpServletRequest chứa username và password
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

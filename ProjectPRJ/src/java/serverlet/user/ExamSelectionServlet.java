@@ -14,9 +14,31 @@ import model.ExamSet;
 import model.QuestionCategory;
 import model.User;
 
+/**
+ * Servlet xử lý trang chọn đề thi cho người dùng.
+ * Servlet này hiển thị danh sách đề thi theo danh mục với phân trang và thống
+ * kê của user.
+ */
 public class ExamSelectionServlet extends HttpServlet {
+    /** Số lượng đề thi hiển thị trên mỗi trang */
     private static final int EXAMS_PER_PAGE = 10;
 
+    /**
+     * Hiển thị trang chọn đề thi với danh sách đề thi theo danh mục.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập chưa
+     * 2. Lấy danh sách tất cả danh mục câu hỏi
+     * 3. Lấy categoryId từ request (mặc định là danh mục đầu tiên)
+     * 4. Lấy số trang từ request (mặc định là trang 1)
+     * 5. Lấy danh sách đề thi theo danh mục với phân trang
+     * 6. Lấy thống kê của user: tổng số bài đã làm, số bài đỗ, điểm lần cuối
+     * 7. Forward đến trang exam-selection.jsp với tất cả dữ liệu
+     * 
+     * @param request  HttpServletRequest chứa categoryId và page
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

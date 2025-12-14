@@ -9,14 +9,43 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
 
+/**
+ * Servlet xử lý đăng ký tài khoản người dùng mới.
+ * Servlet này xử lý cả GET (hiển thị form đăng ký) và POST (xử lý đăng ký).
+ */
 public class RegisterServlet extends HttpServlet {
 
+    /**
+     * Hiển thị trang đăng ký.
+     * Forward request đến trang register.jsp để hiển thị form đăng ký.
+     * 
+     * @param request  HttpServletRequest
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.getRequestDispatcher("/common/register.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý yêu cầu đăng ký từ form.
+     * Hàm này:
+     * 1. Lấy thông tin đăng ký: username, email, password, confirmPassword
+     * 2. Kiểm tra password và confirmPassword có khớp không
+     * 3. Kiểm tra username đã tồn tại chưa
+     * 4. Kiểm tra email đã được sử dụng chưa
+     * 5. Nếu tất cả hợp lệ: gọi UserDAO.register() để tạo tài khoản mới
+     * 6. Nếu thành công: forward đến trang login với thông báo thành công
+     * 7. Nếu thất bại: hiển thị thông báo lỗi và forward lại trang register
+     * 
+     * @param request  HttpServletRequest chứa thông tin đăng ký
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

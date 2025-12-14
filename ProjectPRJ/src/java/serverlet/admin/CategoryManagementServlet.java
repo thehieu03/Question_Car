@@ -11,14 +11,33 @@ import java.util.List;
 import model.QuestionCategory;
 import model.User;
 
+/**
+ * Servlet quản lý danh mục câu hỏi cho admin.
+ * Servlet này xử lý:
+ * - GET: Hiển thị danh sách tất cả danh mục
+ * - POST: Xử lý các thao tác: thêm, sửa, xóa danh mục
+ */
 public class CategoryManagementServlet extends HttpServlet {
 
+    /**
+     * Hiển thị trang quản lý danh mục câu hỏi.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập và là admin chưa
+     * 2. Lấy danh sách tất cả danh mục
+     * 3. Lấy tổng số danh mục
+     * 4. Forward đến trang category-management.jsp với danh sách danh mục
+     * 
+     * @param request  HttpServletRequest
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
-        
+
         if (admin == null || !admin.isAdmin()) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -34,12 +53,25 @@ public class CategoryManagementServlet extends HttpServlet {
         request.getRequestDispatcher("/admin/category-management.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý các thao tác quản lý danh mục.
+     * Hàm này xử lý các action:
+     * - "add": Thêm danh mục mới
+     * - "update": Cập nhật tên danh mục
+     * - "delete": Xóa danh mục
+     * Sau khi xử lý, gọi doGet() để hiển thị lại danh sách với thông báo kết quả.
+     * 
+     * @param request  HttpServletRequest chứa action và các thông tin liên quan
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User admin = (User) session.getAttribute("user");
-        
+
         if (admin == null || !admin.isAdmin()) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -82,4 +114,3 @@ public class CategoryManagementServlet extends HttpServlet {
         doGet(request, response);
     }
 }
-

@@ -19,10 +19,36 @@ import model.Question;
 import model.QuestionCategory;
 import model.User;
 
+/**
+ * Servlet quản lý câu hỏi cho admin.
+ * Servlet này xử lý:
+ * - GET: Hiển thị danh sách câu hỏi với tìm kiếm, lọc theo loại/danh mục và
+ * phân trang
+ * Có thể trả về JSON khi action = "getAnswers" để lấy đáp án của một câu hỏi
+ * - POST: Xử lý các thao tác: thêm, sửa, xóa câu hỏi và đáp án
+ */
 public class QuestionManagementServlet extends HttpServlet {
 
+    /** Số lượng câu hỏi hiển thị trên mỗi trang */
     private static final int QUESTIONS_PER_PAGE = 10;
 
+    /**
+     * Hiển thị trang quản lý câu hỏi hoặc trả về JSON đáp án.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập và là admin chưa
+     * 2. Nếu action = "getAnswers": trả về JSON chứa danh sách đáp án của câu hỏi
+     * 3. Nếu không có action đặc biệt:
+     * - Lấy các tham số lọc: keyword, type (critical/normal/all), categoryId, page
+     * - Lấy danh sách câu hỏi với các bộ lọc và phân trang
+     * - Lấy danh sách danh mục để hiển thị dropdown
+     * - Tính tổng số trang
+     * - Forward đến trang question-management.jsp
+     * 
+     * @param request  HttpServletRequest chứa các tham số lọc và action
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -128,6 +154,20 @@ public class QuestionManagementServlet extends HttpServlet {
         request.getRequestDispatcher("/admin/question-management.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý các thao tác quản lý câu hỏi.
+     * Hàm này xử lý các action:
+     * - "delete": Xóa câu hỏi (cần xóa đáp án trước)
+     * - "add": Thêm câu hỏi mới kèm 4 đáp án (1 đúng, 3 sai)
+     * - "update": Cập nhật câu hỏi và đáp án (xóa đáp án cũ, thêm đáp án mới)
+     * Sau khi xử lý, gọi doGet() để hiển thị lại danh sách với thông báo kết quả.
+     * 
+     * @param request  HttpServletRequest chứa action và các thông tin câu hỏi/đáp
+     *                 án
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -226,6 +266,14 @@ public class QuestionManagementServlet extends HttpServlet {
         doGet(request, response);
     }
 
+    /**
+     * Lấy ID của câu hỏi vừa được tạo gần nhất.
+     * Hàm helper này truy vấn database để lấy question_id lớn nhất.
+     * Dùng để lấy ID của câu hỏi vừa tạo để thêm đáp án vào.
+     * 
+     * @param questionDAO QuestionDAO instance (không sử dụng trong hàm này)
+     * @return ID của câu hỏi mới nhất, trả về 0 nếu không có hoặc có lỗi
+     */
     private int getLastInsertedQuestionId(QuestionDAO questionDAO) {
         String sql = "SELECT MAX(question_id) AS last_id FROM Questions";
         try {

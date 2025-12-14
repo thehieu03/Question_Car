@@ -22,8 +22,33 @@ import model.User;
 import model.UserAnswer;
 import model.UserExam;
 
+/**
+ * Servlet hiển thị kết quả bài thi chi tiết.
+ * Servlet này hiển thị:
+ * - Thông tin bài thi (điểm, số câu đúng/sai, đỗ/trượt)
+ * - Danh sách câu hỏi với đáp án user đã chọn và đáp án đúng
+ * - Bình luận của user về đề thi (nếu có)
+ */
 public class ExamResultServlet extends HttpServlet {
 
+    /**
+     * Hiển thị trang kết quả bài thi chi tiết.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập chưa
+     * 2. Lấy userExamId từ request và kiểm tra tính hợp lệ
+     * 3. Kiểm tra bài thi thuộc về user
+     * 4. Lấy thông tin đề thi (ExamSet)
+     * 5. Lấy danh sách câu hỏi và đáp án
+     * 6. Lấy câu trả lời của user cho từng câu hỏi
+     * 7. Tìm đáp án đúng cho từng câu hỏi
+     * 8. Lấy bình luận của user về đề thi này (nếu có)
+     * 9. Forward đến trang exam-result.jsp với tất cả dữ liệu
+     * 
+     * @param request  HttpServletRequest chứa userExamId
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -99,6 +124,15 @@ public class ExamResultServlet extends HttpServlet {
         request.getRequestDispatcher("/user/exam-result.jsp").forward(request, response);
     }
 
+    /**
+     * Lấy tất cả câu trả lời của user cho một bài thi.
+     * Hàm helper này truy vấn trực tiếp database để lấy UserAnswers.
+     * 
+     * @param userExamId ID của bài thi
+     * @param questions  Danh sách câu hỏi (không sử dụng trong hàm này nhưng có thể
+     *                   dùng để validate)
+     * @return Map với key là questionId và value là UserAnswer tương ứng
+     */
     private Map<Integer, UserAnswer> getUserAnswers(int userExamId, List<Question> questions) {
         Map<Integer, UserAnswer> userAnswersMap = new HashMap<>();
         String sql = "SELECT * FROM UserAnswers WHERE user_exam_id = ?";

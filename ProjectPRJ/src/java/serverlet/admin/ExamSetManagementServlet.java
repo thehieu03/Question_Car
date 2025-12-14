@@ -20,10 +20,35 @@ import model.Answer;
 import model.QuestionCategory;
 import model.User;
 
+/**
+ * Servlet quản lý đề thi cho admin.
+ * Servlet này xử lý:
+ * - GET: Hiển thị danh sách đề thi với phân trang, hoặc xem chi tiết đề thi
+ * (action = "view")
+ * - POST: Xử lý các thao tác: thêm, xóa đề thi
+ */
 public class ExamSetManagementServlet extends HttpServlet {
 
+    /** Số lượng đề thi hiển thị trên mỗi trang */
     private static final int EXAMS_PER_PAGE = 10;
 
+    /**
+     * Hiển thị trang quản lý đề thi hoặc xem chi tiết đề thi.
+     * Hàm này:
+     * 1. Kiểm tra user đã đăng nhập và là admin chưa
+     * 2. Nếu action = "view": gọi handleViewDetail() để hiển thị chi tiết đề thi
+     * 3. Nếu không có action đặc biệt:
+     * - Lấy số trang từ request (mặc định là trang 1)
+     * - Lấy danh sách đề thi với phân trang
+     * - Lấy danh sách danh mục để hiển thị dropdown
+     * - Tính tổng số trang
+     * - Forward đến trang exam-management.jsp
+     * 
+     * @param request  HttpServletRequest chứa page và action
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -69,6 +94,21 @@ public class ExamSetManagementServlet extends HttpServlet {
         request.getRequestDispatcher("/admin/exam-management.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý các thao tác quản lý đề thi.
+     * Hàm này xử lý các action:
+     * - "add": Tạo đề thi mới:
+     * + Kiểm tra tính hợp lệ của dữ liệu đầu vào
+     * + Kiểm tra đủ số lượng câu hỏi (40% câu điểm liệt, 60% câu thường)
+     * + Tạo đề thi và tự động chọn câu hỏi từ danh mục
+     * - "delete": Xóa đề thi và tất cả bài thi liên quan
+     * Sau khi xử lý, gọi doGet() để hiển thị lại danh sách với thông báo kết quả.
+     * 
+     * @param request  HttpServletRequest chứa action và các thông tin đề thi
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -160,6 +200,20 @@ public class ExamSetManagementServlet extends HttpServlet {
         doGet(request, response);
     }
 
+    /**
+     * Hiển thị chi tiết một đề thi.
+     * Hàm này:
+     * 1. Lấy examSetId từ request và kiểm tra tính hợp lệ
+     * 2. Lấy thông tin đề thi
+     * 3. Lấy danh sách câu hỏi trong đề thi
+     * 4. Lấy đáp án cho từng câu hỏi
+     * 5. Forward đến trang exam-detail.jsp với tất cả dữ liệu
+     * 
+     * @param request  HttpServletRequest chứa examSetId
+     * @param response HttpServletResponse
+     * @throws ServletException Nếu có lỗi servlet
+     * @throws IOException      Nếu có lỗi I/O
+     */
     private void handleViewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String examSetIdParam = request.getParameter("examSetId");
@@ -194,6 +248,13 @@ public class ExamSetManagementServlet extends HttpServlet {
         request.getRequestDispatcher("/admin/exam-detail.jsp").forward(request, response);
     }
 
+    /**
+     * Chuyển đổi chuỗi thành số nguyên dương.
+     * Hàm helper này parse string thành int, trả về -1 nếu không hợp lệ.
+     * 
+     * @param value Chuỗi cần chuyển đổi
+     * @return Số nguyên dương nếu hợp lệ, -1 nếu không hợp lệ hoặc rỗng
+     */
     private int parsePositiveInt(String value) {
         try {
             if (value == null || value.trim().isEmpty()) {
